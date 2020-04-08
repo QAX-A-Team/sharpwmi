@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29613.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "sharpwmi", "sharpwmi\sharpwmi.csproj", "{BB357D38-6DC1-4F20-A54C-D664BD20677E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BB357D38-6DC1-4F20-A54C-D664BD20677E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BB357D38-6DC1-4F20-A54C-D664BD20677E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BB357D38-6DC1-4F20-A54C-D664BD20677E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BB357D38-6DC1-4F20-A54C-D664BD20677E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BADC1E26-3340-420F-A20A-DEC0A024C42F}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,5 @@
+C:\Users\Administrator\source\repos\sharpwmi\sharpwmi\bin\Release\sharpwmi.exe
+C:\Users\Administrator\source\repos\sharpwmi\sharpwmi\bin\Release\sharpwmi.pdb
+C:\Users\Administrator\source\repos\sharpwmi\sharpwmi\obj\Release\sharpwmi.csprojAssemblyReference.cache
+C:\Users\Administrator\source\repos\sharpwmi\sharpwmi\obj\Release\sharpwmi.exe
+C:\Users\Administrator\source\repos\sharpwmi\sharpwmi\obj\Release\sharpwmi.pdb
