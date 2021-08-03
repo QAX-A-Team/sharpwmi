@@ -1,0 +1,4 @@
+sharpwmi/obj/
+sharpwmi/bin/
+.vs/
+sharpwmi/app.config

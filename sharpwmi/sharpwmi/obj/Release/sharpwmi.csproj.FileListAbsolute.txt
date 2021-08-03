@@ -3,3 +3,10 @@ C:\Users\Administrator\source\repos\sharpwmi\sharpwmi\bin\Release\sharpwmi.pdb
 C:\Users\Administrator\source\repos\sharpwmi\sharpwmi\obj\Release\sharpwmi.csprojAssemblyReference.cache
 C:\Users\Administrator\source\repos\sharpwmi\sharpwmi\obj\Release\sharpwmi.exe
 C:\Users\Administrator\source\repos\sharpwmi\sharpwmi\obj\Release\sharpwmi.pdb
+D:\Code\Git\C\sharpwmi\sharpwmi\sharpwmi\bin\Release\sharpwmi.exe
+D:\Code\Git\C\sharpwmi\sharpwmi\sharpwmi\bin\Release\sharpwmi.pdb
+D:\Code\Git\C\sharpwmi\sharpwmi\sharpwmi\obj\Release\sharpwmi.csproj.CoreCompileInputs.cache
+D:\Code\Git\C\sharpwmi\sharpwmi\sharpwmi\obj\Release\sharpwmi.exe
+D:\Code\Git\C\sharpwmi\sharpwmi\sharpwmi\obj\Release\sharpwmi.pdb
+D:\Code\Git\C\sharpwmi\sharpwmi\sharpwmi\bin\Release\sharpwmi.exe.config
+D:\Code\Git\C\sharpwmi\sharpwmi\sharpwmi\obj\Release\sharpwmi.csproj.AssemblyReference.cache
